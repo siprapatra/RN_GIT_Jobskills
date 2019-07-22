@@ -31,6 +31,9 @@ If it has been a while since you last ran the app, some things may have changed 
 
 The app will pair the usage of Eslint and Prettier to enforce code formatting and style. You can see the configurations for these in the `.eslintrc.js` and `.prettierrc` files.
 
+### Custom Node modules
+
+Customized react native libraries node modules react-native-ble-manager and react-native-gesture-handler 
 # Testing to improve code quality
 
 Just run yarn test. This will run jest with any parameters you give the command. Currently snapshots are being used only to identify changes.
