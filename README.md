@@ -8,6 +8,7 @@ Follow below steps to run this project:-
 2) run "npm install"
 3) run "cd ios && pod install && cd .."
 4) To run on Android "react-native run-android" or To run on ios "react-native run-ios"
+5) To create apk in Android run "cd android && ./gradlew assembleDebug". Apk will be generated in Android build folder
 
 ### Build Issues
 
