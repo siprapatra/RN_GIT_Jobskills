@@ -1,0 +1,32 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`FlatList component Matches the snapshot 1`] = `
+<View
+  onStartShouldSetResponder={[Function]}
+  style={
+    Object {
+      "alignItems": "stretch",
+      "backgroundColor": "transparent",
+      "elevation": 2,
+      "justifyContent": "flex-start",
+      "overflow": "hidden",
+      "position": "absolute",
+      "shadowColor": "#576970",
+      "shadowOffset": Object {
+        "height": 1,
+        "width": 0,
+      },
+      "shadowOpacity": 0.25,
+      "shadowRadius": 2,
+      "top": 24,
+      "transform": Array [
+        Object {
+          "translateX": -750,
+        },
+      ],
+      "width": "100%",
+      "zIndex": 10,
+    }
+  }
+/>
+`;

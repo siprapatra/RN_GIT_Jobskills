@@ -1,0 +1,4 @@
+#Mon Jul 22 12:56:37 MDT 2019
+base.0=/Users/spatra/Desktop/p/RN_Git_JobSkills/android/app/build/intermediates/transforms/dexMerger/debug/0
+path.0=classes.dex
+renamed.0=classes.dex

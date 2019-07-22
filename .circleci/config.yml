@@ -1,0 +1,187 @@
+version: 2
+jobs:
+  node:
+    working_directory: ~/ReactNative_JobSkills
+    docker:
+      - image: circleci/node:8
+    steps:
+      - checkout
+
+      - restore_cache:
+          key: yarn-cache-{{ .Branch }}-{{ checksum "yarn.lock" }}-{{ arch }}
+
+      - restore_cache:
+          key: node-cache-{{ .Branch }}-{{ checksum "package.json" }}-{{ arch }}
+
+      - run: yarn install
+
+      - save_cache:
+          key: yarn-cache-{{ .Branch }}-{{ checksum "yarn.lock" }}-{{ arch }}
+          paths:
+            - ~/.cache/yarn
+
+      - save_cache:
+          key: node-cache-{{ .Branch }}-{{ checksum "package.json" }}-{{ arch }}
+          paths:
+            - node_modules
+
+      - run:
+          name: create config file
+          command: |
+            if [ "${CIRCLE_BRANCH}" == "master" ]; then
+              yarn run config:prod
+              echo Wrote Config For Production
+            else
+              yarn run config:dev
+              echo Wrote Config For Dev
+            fi
+
+      - run:
+          name: Setup Code Climate test-reporter
+          command: |
+            # download test reporter as a static binary
+            curl -L -o ./cc-test-reporter https://codeclimate.com/downloads/test-reporter/test-reporter-latest-linux-amd64
+            chmod +x ./cc-test-reporter
+
+      - run:
+          name: jest tests
+          command: |
+            echo Running lint
+            yarn lint
+            ./cc-test-reporter before-build
+            echo Running test
+            yarn test --coverage --runInBand
+            ./cc-test-reporter after-build --coverage-input-type lcov --exit-code $?
+
+      - persist_to_workspace:
+          root: ~/ReactNative_JobSkills
+          paths:
+            - node_modules
+            - src/config.json
+
+  android:
+    working_directory: ~/ReactNative_JobSkills
+    docker:
+      - image: circleci/android:api-28-node8-alpha
+    steps:
+      - checkout:
+          path: ~/ReactNative_JobSkills
+
+      - attach_workspace:
+          at: ~/ReactNative_JobSkills
+
+      - restore_cache:
+          key: bundle-cache-{{ .Branch }}-{{ checksum "Gemfile.lock" }}-{{ arch }}
+
+      - run: gem update bundler && bundle install
+
+      - save_cache:
+          key: bundle-cache-{{ .Branch }}-{{ checksum "Gemfile.lock" }}-{{ arch }}
+          paths:
+            - vendor/bundle
+
+      - restore_cache:
+          key: jars-cache-{{ .Branch }}-{{ checksum "android/build.gradle" }}-{{ checksum  "android/app/build.gradle" }}
+
+      - run:
+          name: make gradlew executable
+          command: |
+            echo 'export TERM=xterm' >> $BASH_ENV && sudo chmod +x android/gradlew
+
+      - run:
+          name: accept all licenses on error
+          command: |
+            yes | $ANDROID_HOME/tools/bin/sdkmanager --licenses || if [ $? -ne '141' ]; then exit $?; fi;  #Captures SIGPIPE 141 error but still allow repeating "y" to accept all licenses
+
+      - run:
+          name: android build
+          command: |
+            if [ "${CIRCLE_BRANCH}" == "staging" ]; then
+              yarn android:staging
+            else
+              yarn android:dev
+            fi
+
+      - save_cache:
+          paths:
+            - ~/.gradle
+          key: jars-cache-{{ .Branch }}-{{ checksum "android/build.gradle" }}-{{ checksum  "android/app/build.gradle" }}
+
+  ios:
+    macos:
+      xcode: '10.1.0'
+    working_directory: ~/ReactNative_JobSkills
+
+    shell: /bin/bash --login -o pipefail
+
+    steps:
+      - checkout
+
+      - run:
+          name: set Ruby version
+          command: echo "ruby-2.4" > ~/.ruby-version
+
+      - restore_cache:
+          key: yarn-cache-{{ .Branch }}-{{ checksum "yarn.lock" }}-{{ arch }}
+
+      - restore_cache:
+          key: node-cache-{{ .Branch }}-{{ checksum "package.json" }}-{{ arch }}
+
+      - run: yarn install
+
+      - save_cache:
+          key: yarn-cache-{{ .Branch }}-{{ checksum "yarn.lock" }}-{{ arch }}
+          paths:
+            - ~/.cache/yarn
+
+      - save_cache:
+          key: node-cache-{{ .Branch }}-{{ checksum "package.json" }}-{{ arch }}
+          paths:
+            - node_modules
+
+      - restore_cache:
+          key: bundle-cache-{{ .Branch }}-{{ checksum "Gemfile.lock" }}-{{ arch }}
+
+      - run:
+          command: gem update bundler && bundle install
+
+      - save_cache:
+          key: bundle-cache-{{ .Branch }}-{{ checksum "Gemfile.lock" }}-{{ arch }}
+          paths:
+            - vendor/bundle
+
+      - run:
+          name: create config file
+          command: |
+            if [ "${CIRCLE_BRANCH}" == "master" ]; then
+              yarn run config:prod
+              echo Wrote Config For Production
+            else
+              yarn run config:dev
+              echo Wrote Config For Dev
+            fi
+
+      - run:
+          command: |
+            if [ "${CIRCLE_BRANCH}" == "staging" ]; then
+              yarn ios:staging
+            else
+              yarn ios:dev
+            fi
+
+      # Uncomment if build fails and re-run to get ios build log for gym
+      #- store_artifacts:
+      #    path: ~/Library/Logs/gym/ReactNative_JobSkills-ReactNative_JobSkills.log
+
+workflows:
+  version: 2
+
+  node-android-ios:
+    jobs:
+      - node
+      - android:
+          requires:
+            - node
+      - ios:
+          requires:
+            - node
