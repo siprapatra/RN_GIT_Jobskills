@@ -9,7 +9,7 @@
   },
   "dependencies": {
     "react": "16.8.6",
-    "react-native": "0.60.3",
+    "react-native": "0.62.3",
     "react-native-ble-manager": "https://github.com/siprapatra/react-native-ble-manager#master",
     "react-native-gesture-handler": "https://github.com/siprapatra/react-native-gesture-handler#master",
     "react-native-search-header": "^0.3.4",
